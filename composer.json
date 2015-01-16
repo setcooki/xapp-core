@@ -1,5 +1,5 @@
 {
-    "name": "xapp-core",
+    "name": "xapp/core",
     "type": "xapp-module",
     "keywords": ["xapp", "core"],
     "homepage": "http://xapp-php.com",
@@ -14,10 +14,5 @@
     "require": {
         "php": ">=5.2.6"
     },
-    "repositories": [{
-        "packagist": false,
-        "type": "composer",
-        "url": "http://www.xapp-php.com/packages/packages.json"
-    }],
     "minimum-stability": "dev"
 }
