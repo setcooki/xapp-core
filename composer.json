@@ -1,5 +1,5 @@
 {
-    "name": "xapp/core",
+    "name": "xapp-core",
     "type": "xapp-module",
     "keywords": ["xapp", "core"],
     "homepage": "http://xapp-php.com",
