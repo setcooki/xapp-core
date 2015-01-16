@@ -886,21 +886,48 @@ function xapp_import($import)
             $base = implode(DS, $base);
             $path = xapp_path(XAPP_PATH_BASE);
             $path = array_diff(array_merge((array)$path, (array)xapp_conf(XAPP_CONF_IMPORT_PATH)), array(''), array(1));
+	        error_log('path: '. json_encode($path) . ' for '. SOURCE_SEPARATOR);
             foreach($path as $p)
             {
+	            /**
+	             * @frank, had to hack this to keep moving
+	             */
                 $p = rtrim($p, DS) . DS;
+
                 if(is_file($p . $base . DS . $class . XAPP_EXT))
                 {
                     array_push($GLOBALS['XAPP_IMPORTS'], $import);
                     require_once $p . $base . DS . $class . XAPP_EXT;
                     return true;
                 }
-                if(is_file($p . $base . DS . $class . DS . $class . XAPP_EXT))
+
+	            if(is_file($p . $base . DS . 'src' . DIRECTORY_SEPARATOR . $class . XAPP_EXT))
+	            {
+		            array_push($GLOBALS['XAPP_IMPORTS'], $import);
+		            require_once $p . $base . DS . 'src' . DIRECTORY_SEPARATOR . $class . XAPP_EXT;
+		            return true;
+	            }
+
+	            if(is_file($p . $base . DS . $class . DS . $class . XAPP_EXT))
                 {
                     array_push($GLOBALS['XAPP_IMPORTS'], $import);
                     require_once $p . $base . DS . $class . DS . $class . XAPP_EXT;
                     return true;
                 }
+
+	            if(is_file($p . $base . DS .  $class . DS .  'src' .  DS . $class . XAPP_EXT))
+	            {
+		            array_push($GLOBALS['XAPP_IMPORTS'], $import);
+		            require_once $p . $base . DS .  $class . DS .  'src' .  DS . $class . XAPP_EXT;
+		            return true;
+	            }
+
+	            if(is_file($p . $base . DS . 'src' . DS . $class .  DS . $class . XAPP_EXT))
+	            {
+		            array_push($GLOBALS['XAPP_IMPORTS'], $import);
+		            require_once $p . $base . DS . 'src' . DS . $class .  DS . $class . XAPP_EXT;
+		            return true;
+	            }
             }
             trigger_error("unable to import: $import - class not found", E_USER_ERROR);
         //import package
