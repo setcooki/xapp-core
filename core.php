@@ -886,8 +886,7 @@ function xapp_import($import)
             $base = implode(DS, $base);
             $path = xapp_path(XAPP_PATH_BASE);
             $path = array_diff(array_merge((array)$path, (array)xapp_conf(XAPP_CONF_IMPORT_PATH)), array(''), array(1));
-	        error_log('path: '. json_encode($path) . ' for '. SOURCE_SEPARATOR);
-            foreach($path as $p)
+	        foreach($path as $p)
             {
 	            /**
 	             * @frank, had to hack this to keep moving
@@ -928,6 +927,15 @@ function xapp_import($import)
 		            require_once $p . $base . DS . 'src' . DS . $class .  DS . $class . XAPP_EXT;
 		            return true;
 	            }
+
+	            //$try = $p . $base . DS . 'src' . DS . $class .  DS . $class . XAPP_EXT;
+	            //p = /PMaster/projects/xapp-php/xapp-all/ base = xapp/Log/Writer class= Exception import=xapp.Log.Writer.Exception last try= /xapp/Log/Writer/src/Exception/Exception.php
+
+	         //   error_log('p = ' . $p . ' base = ' . $base . ' class= ' . $class . ' import=' . $import . ' last try= ' . $try);
+
+
+
+
             }
             trigger_error("unable to import: $import - class not found", E_USER_ERROR);
         //import package
