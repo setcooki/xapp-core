@@ -27,7 +27,8 @@ interface Xapp_Dump_Interface{ public function dump($message); }
 // global facade classes
 // *********************************************************************************************************************
 class XO extends StdClass{}
-class Xapp_Result_Exception extends Exception{}
+class Xapp_Exception extends ErrorException{}
+class Xapp_Result_Exception extends Xapp_Exception{}
 
 /**
  * defines what minimum php version is required when using xapp
@@ -886,56 +887,21 @@ function xapp_import($import)
             $base = implode(DS, $base);
             $path = xapp_path(XAPP_PATH_BASE);
             $path = array_diff(array_merge((array)$path, (array)xapp_conf(XAPP_CONF_IMPORT_PATH)), array(''), array(1));
-	        foreach($path as $p)
+            foreach($path as $p)
             {
-	            /**
-	             * @frank, had to hack this to keep moving
-	             */
                 $p = rtrim($p, DS) . DS;
-
                 if(is_file($p . $base . DS . $class . XAPP_EXT))
                 {
                     array_push($GLOBALS['XAPP_IMPORTS'], $import);
                     require_once $p . $base . DS . $class . XAPP_EXT;
                     return true;
                 }
-
-	            if(is_file($p . $base . DS . 'src' . DIRECTORY_SEPARATOR . $class . XAPP_EXT))
-	            {
-		            array_push($GLOBALS['XAPP_IMPORTS'], $import);
-		            require_once $p . $base . DS . 'src' . DIRECTORY_SEPARATOR . $class . XAPP_EXT;
-		            return true;
-	            }
-
-	            if(is_file($p . $base . DS . $class . DS . $class . XAPP_EXT))
+                if(is_file($p . $base . DS . $class . DS . $class . XAPP_EXT))
                 {
                     array_push($GLOBALS['XAPP_IMPORTS'], $import);
                     require_once $p . $base . DS . $class . DS . $class . XAPP_EXT;
                     return true;
                 }
-
-	            if(is_file($p . $base . DS .  $class . DS .  'src' .  DS . $class . XAPP_EXT))
-	            {
-		            array_push($GLOBALS['XAPP_IMPORTS'], $import);
-		            require_once $p . $base . DS .  $class . DS .  'src' .  DS . $class . XAPP_EXT;
-		            return true;
-	            }
-
-	            if(is_file($p . $base . DS . 'src' . DS . $class .  DS . $class . XAPP_EXT))
-	            {
-		            array_push($GLOBALS['XAPP_IMPORTS'], $import);
-		            require_once $p . $base . DS . 'src' . DS . $class .  DS . $class . XAPP_EXT;
-		            return true;
-	            }
-
-	            //$try = $p . $base . DS . 'src' . DS . $class .  DS . $class . XAPP_EXT;
-	            //p = /PMaster/projects/xapp-php/xapp-all/ base = xapp/Log/Writer class= Exception import=xapp.Log.Writer.Exception last try= /xapp/Log/Writer/src/Exception/Exception.php
-
-	         //   error_log('p = ' . $p . ' base = ' . $base . ' class= ' . $class . ' import=' . $import . ' last try= ' . $try);
-
-
-
-
             }
             trigger_error("unable to import: $import - class not found", E_USER_ERROR);
         //import package
@@ -1451,7 +1417,7 @@ if(!function_exists('xapp_can_options'))
             {
                 $class = get_class($class);
             }
-            return (bool)property_exists($class, 'options');
+            return (bool)property_exists((string)$class, 'options');
         }
         return false;
     }
@@ -1478,12 +1444,10 @@ if(!function_exists('xapp_init_options'))
         $options = (array)$options;
         if(is_array($mixed)){
             $mixed = array_merge($mixed, $options);
-        }else if(xapped()){
+        }else if(xapped()) {
             Xapp::initOptions($options, $mixed);
-        }else if(is_object($mixed) && xapp_can_options($mixed)){
-            $mixed->options = array_merge($mixed->options, $options);
-        }else if(is_string($mixed) && xapp_can_options($mixed)){
-            $mixed::$options = array_merge($mixed::$options, $options);
+        }else if(xapp_can_options($mixed)){
+            Xapp_Reflection::propertyFactory($mixed, 'options', $options, true);
         }
         return null;
     }
@@ -1513,10 +1477,10 @@ if(!function_exists('xapp_set_options'))
                 return $mixed = array_merge($mixed, $options);
             }else if(xapped()){
                 return Xapp::setOptions($options, $mixed);
-            }else if(is_object($mixed) && xapp_can_options($mixed)){
-                return $mixed->options = array_merge($mixed->options, $options);
-            }else if(is_string($mixed) && xapp_can_options($mixed)){
-                return $mixed::$options = array_merge($mixed::$options, $options);
+            }else if(xapp_can_options($mixed)){
+                $_options = (array)Xapp_Reflection::propertyFactory($mixed, 'options');
+                $_options = array_merge($_options, $options);
+                return Xapp_Reflection::propertyFactory($mixed, 'options', $_options, true);
             }
         }
         return null;
@@ -1550,10 +1514,10 @@ if(!function_exists('xapp_set_option'))
                 return $mixed[$key] = $value;
             }else if(xapped()){
                 return Xapp::setOption($key, $value, $mixed, $reset);
-            }else if(is_object($mixed) && xapp_can_options($mixed)){
-                return $mixed->options[$key] = $value;
-            }else if(is_string($mixed) && xapp_can_options($mixed)){
-                return $mixed::$options[$key] = $value;
+            }else if(xapp_can_options($mixed)){
+                $options = (array)Xapp_Reflection::propertyFactory($mixed, 'options');
+                $options[$key] = $value;
+                return Xapp_Reflection::propertyFactory($mixed, 'options', $options, true);
             }
         }
         return null;
@@ -1578,12 +1542,10 @@ if(!function_exists('xapp_get_options'))
     {
         if(is_array($mixed)){
             return $mixed;
-        }else if(xapped()){
+        }else if(xapped()) {
             return (array)Xapp::getOptions($mixed);
-        }else if(is_object($mixed) && xapp_can_options($mixed)){
-            return (array)$mixed->options;
-        }else if(is_string($mixed) && xapp_can_options($mixed)){
-            return (array)$mixed::$options;
+        }else if(xapp_can_options($mixed)){
+            return (array)Xapp_Reflection::propertyFactory($mixed, 'options');
         }else{
             return xapp_default($default);
         }
@@ -1613,10 +1575,9 @@ if(!function_exists('xapp_get_option'))
                 return (array_key_exists($key, $mixed)) ? $mixed[$key] : $default;
             }else if(xapped()){
                 return Xapp::getOption($key, $mixed, $default);
-            }else if(is_object($mixed) && xapp_can_options($mixed)){
-                return (array_key_exists($key, $mixed->options)) ? $mixed->options[$key] : $default;
-            }else if(is_string($mixed) && xapp_can_options($mixed)){
-                return (array_key_exists($key, $mixed::$options)) ? $mixed::$options[$key] : $default;
+            }else if(xapp_can_options($mixed)){
+                $options = (array)Xapp_Reflection::propertyFactory($mixed, 'options');
+                return (array_key_exists($key, $options)) ? $options[$key] : xapp_default($default);
             }
         }
         return xapp_default($default);
@@ -1649,10 +1610,9 @@ if(!function_exists('xapp_has_option'))
                 return (($strict) ? (array_key_exists($key, $mixed) && xapp_is('value', $mixed[$key])) : array_key_exists($key, $mixed));
             }else if(xapped()){
                 return Xapp::hasOption($key, $mixed, $strict);
-            }else if(is_object($mixed) && xapp_can_options($mixed)){
-                return (($strict) ? (array_key_exists($key, $mixed->options) && xapp_is('value', $mixed->options[$key])) : array_key_exists($key, $mixed->options));
-            }else if(is_string($mixed) && xapp_can_options($mixed)){
-                return (($strict) ? (array_key_exists($key, $mixed::$options) && xapp_is('value', $mixed::$options[$key])) : array_key_exists($key, $mixed::$options));
+            }else if(xapp_can_options($mixed)){
+                $options = (array)Xapp_Reflection::propertyFactory($mixed, 'options');
+                return (($strict) ? (array_key_exists($key, $options) && xapp_is('value', $options[$key])) : array_key_exists($key, $options));
             }
         }
         return false;
@@ -1678,10 +1638,9 @@ if(!function_exists('xapp_is_option'))
                 return xapp_is('value', $mixed[$key]);
             }else if(xapped()){
                 return Xapp::hasOption($key, $mixed, true);
-            }else if(is_object($mixed) && xapp_can_options($mixed)){
-                return ((array_key_exists($key, $mixed->options) && xapp_is('value', $mixed->options[$key])) ? true : false);
-            }else if(is_string($mixed) && xapp_can_options($mixed)){
-                return ((array_key_exists($key, $mixed::$options) && xapp_is('value', $mixed::$options[$key])) ? true : false);
+            }else if(xapp_can_options($mixed)){
+                $options = (array)Xapp_Reflection::propertyFactory($mixed, 'options');
+                return ((array_key_exists($key, $options) && xapp_is('value', $options[$key])) ? true : false);
             }
         }
         return false;
@@ -1709,10 +1668,10 @@ if(!function_exists('xapp_unset_option'))
                 if(xapp_has_option($key, $mixed)){ unset($mixed[$key]); }
             }else if(xapped()){
                 if(xapp_has_option($key, $mixed)){ Xapp::unsetOption($key, $mixed); }
-            }else if(is_object($mixed) && xapp_can_options($mixed)){
-                if(xapp_has_option($key, $mixed)){ unset($mixed->options[$key]); }
-            }else if(is_string($mixed) && xapp_can_options($mixed)){
-                if(xapp_has_option($key, $mixed)){ unset($mixed::$options[$key]); }
+            }else if(xapp_can_options($mixed)){
+                $options = (array)Xapp_Reflection::propertyFactory($mixed, 'options');
+                if(array_key_exists($key, $options)) { unset($options[$key]); }
+                Xapp_Reflection::propertyFactory($mixed, 'options', $options, true);
             }
         }
     }
@@ -1740,10 +1699,10 @@ if(!function_exists('xapp_reset_option'))
             if(xapp_has_option($key, $mixed)){ $mixed[$key] = $value; }
         }else if(xapped()){
             Xapp::resetOption($key, $value, $mixed);
-        }else if(is_object($mixed) && xapp_can_options($mixed)){
-            if(xapp_has_option($key, $mixed)){ $mixed->options[$key] = $value; }
-        }else if(is_string($mixed) && xapp_can_options($mixed)){
-            if(xapp_has_option($key, $mixed)){ $mixed::$options[$key] = $value; }
+        }else if(xapp_can_options($mixed)){
+            $options = (array)Xapp_Reflection::propertyFactory($mixed, 'options');
+            if(array_key_exists($key, $options)) { $options[$key] = $value; }
+            Xapp_Reflection::propertyFactory($mixed, 'options', $options, true);
         }
     }
 }
@@ -1764,12 +1723,10 @@ if(!function_exists('xapp_reset_options'))
     {
         if(is_array($mixed)){
             $mixed = array();
-        }else if(xapped()){
+        }else if(xapped()) {
             Xapp::resetOptions($mixed);
-        }else if(is_object($mixed) && xapp_can_options($mixed)){
-            $mixed->options = array();
-        }else if(is_string($mixed) && xapp_can_options($mixed)){
-            $mixed::$options = array();
+        }else if(xapp_can_options($mixed)){
+            Xapp_Reflection::propertyFactory($mixed, 'options', array(), true);
         }
     }
 }
@@ -1788,7 +1745,7 @@ if(!function_exists('xapp_default'))
      */
     function xapp_default($value)
     {
-        if(is_callable($value) || function_exists($value))
+        if(is_callable($value) || (is_string($value) && function_exists($value)))
         {
             return call_user_func($value);
         }else if($value instanceof Exception) {

@@ -131,19 +131,3 @@ if(!function_exists('gettext'))
         return $message;
     }
 }
-
-if(!function_exists('_'))
-{
-	/**
-	 * gettext shim for server envs and php with gettext support missing. this will only ensure that no warnings/errors
-	 * are thrown if there is no gettext support. if you want to include your own function define gettext() before loading
-	 * xapp
-	 *
-	 * @param string $message expects the string message
-	 * @return string
-	 */
-	function _($message)
-	{
-		return $message;
-	}
-}
