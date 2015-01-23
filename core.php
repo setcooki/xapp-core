@@ -486,23 +486,23 @@ xapp_init();
 xapp_path();
 xapp_conf();
 
-require_once xapp_path(XAPP_PATH_XAPP) . 'Core' . DS . 'helper.php';
-require_once xapp_path(XAPP_PATH_XAPP) . 'Core' . DS . 'legacy.php';
+require_once xapp_path(XAPP_PATH_XAPP) . 'core' . DS . 'helper.php';
+require_once xapp_path(XAPP_PATH_XAPP) . 'core' . DS . 'legacy.php';
 
 // *********************************************************************************************************************
 // include xapp base files if xapp is used with xapp base functionality required if xapp is used as app builder rather
 // then single modules
 // *********************************************************************************************************************
-if(defined('XAPPED') && (bool)constant('XAPPED') && is_dir(__DIR__ . DS . '..' . DS . 'Xapp'))
+if(defined('XAPPED') && (bool)constant('XAPPED') && is_dir(__DIR__ . DS . '..' . DS . 'xapp'))
 {
-    require_once xapp_path(XAPP_PATH_XAPP) . 'Xapp' . DS . SOURCE_SEPARATOR . DS . 'Autoloader.php';
-    require_once xapp_path(XAPP_PATH_XAPP) . 'Xapp' . DS . SOURCE_SEPARATOR . DS . 'Error.php';
-    require_once xapp_path(XAPP_PATH_XAPP) . 'Xapp' . DS . SOURCE_SEPARATOR . DS . 'Reflection.php';
-    require_once xapp_path(XAPP_PATH_XAPP) . 'Xapp' . DS . SOURCE_SEPARATOR . DS . 'Debug.php';
-    require_once xapp_path(XAPP_PATH_XAPP) . 'Xapp' . DS . SOURCE_SEPARATOR . DS . 'Event.php';
-    require_once xapp_path(XAPP_PATH_XAPP) . 'Xapp' . DS . SOURCE_SEPARATOR . DS . 'Xapp.php';
-    require_once xapp_path(XAPP_PATH_XAPP) . 'Xapp' . DS . SOURCE_SEPARATOR . DS . 'Console.php';
-    require_once xapp_path(XAPP_PATH_XAPP) . 'Xapp' . DS . SOURCE_SEPARATOR . DS . 'Profiler.php';
+    require_once xapp_path(XAPP_PATH_XAPP) . 'xapp' . DS . SOURCE_SEPARATOR . DS . 'Autoloader.php';
+    require_once xapp_path(XAPP_PATH_XAPP) . 'xapp' . DS . SOURCE_SEPARATOR . DS . 'Error.php';
+    require_once xapp_path(XAPP_PATH_XAPP) . 'xapp' . DS . SOURCE_SEPARATOR . DS . 'Reflection.php';
+    require_once xapp_path(XAPP_PATH_XAPP) . 'xapp' . DS . SOURCE_SEPARATOR . DS . 'Debug.php';
+    require_once xapp_path(XAPP_PATH_XAPP) . 'xapp' . DS . SOURCE_SEPARATOR . DS . 'Event.php';
+    require_once xapp_path(XAPP_PATH_XAPP) . 'xapp' . DS . SOURCE_SEPARATOR . DS . 'Xapp.php';
+    require_once xapp_path(XAPP_PATH_XAPP) . 'xapp' . DS . SOURCE_SEPARATOR . DS . 'Console.php';
+    require_once xapp_path(XAPP_PATH_XAPP) . 'xapp' . DS . SOURCE_SEPARATOR . DS . 'Profiler.php';
 }
 
 // *********************************************************************************************************************
@@ -564,7 +564,7 @@ function xapp_init()
  * @param mixed $value expects the conf value if in setter mode
  * @return array the full conf array
  */
-function xapp_conf($mixed = null, $value = 'NIL')
+function xapp_conf($mixed = null, $value = '__NIL__')
 {
     $conf = array
     (
@@ -600,7 +600,7 @@ function xapp_conf($mixed = null, $value = 'NIL')
     }
     if($mixed !== null)
     {
-        if(is_string($mixed) && $value !== 'NIL')
+        if(is_string($mixed) && $value !== '__NIL__')
         {
             $mixed = array($mixed => $value);
         }
@@ -616,7 +616,7 @@ function xapp_conf($mixed = null, $value = 'NIL')
             }
             return $GLOBALS['XAPP_CONF'];
         }
-        if(is_string($mixed) && $value === 'NIL')
+        if(is_string($mixed) && $value === '__NIL__')
         {
             return ((array_key_exists($mixed, $GLOBALS['XAPP_CONF'])) ? $GLOBALS['XAPP_CONF'][$mixed] : null);
         }
@@ -634,7 +634,7 @@ function xapp_conf($mixed = null, $value = 'NIL')
  * @param string|null $value if set is the path value in setter mode
  * @return string|null|array according to passed parameter
  */
-function xapp_path($key = null, $value = 'NIL')
+function xapp_path($key = null, $value = '__NIL__')
 {
     $path = array
     (
@@ -653,7 +653,7 @@ function xapp_path($key = null, $value = 'NIL')
     {
         $GLOBALS['XAPP_PATH'] = $path;
     }
-    if($key !== null && $value === 'NIL')
+    if($key !== null && $value === '__NIL__')
     {
         return ((array_key_exists($key, $GLOBALS['XAPP_PATH'])) ? $GLOBALS['XAPP_PATH'][$key] : null);
     }else if($key !== null && $value !== ''){
@@ -763,30 +763,31 @@ function xapp_is($type = null, $value = null)
  *
  * 1) absolute file like /var/www/app/foo.php - includes file directly
  * 2) relative file like /app/foo.php - tries to include file from known xapp paths
- * 3) java style class xapp.Xapp.Event - imports class
- * 4) java style package xapp.Xapp.* - imports packages
+ * 3) java style class xapp.xapp.Event - imports class
+ * 4) java style package xapp.xapp.* - imports packages
  *
  * this function can not import:
  * 3) absolute dirs like /var/www/app - not supported!
  * 4) relative dirs like /app - not supported!
  *
- * the function store all imported java style classes and packages into a global package cache to check if package has been
+ * the function stores all imported java style classes and packages into a global package cache to check if package has been
  * already imported and therefore does not execute any import code. the function does not throw any error but simply tries
  * to require the $import param with triggering php error when $import value require fails.
  *
- * The import function does have hidden additional parameters when using java style dotmnotation wildcard loading. the
+ * The import function does have hidden additional parameters when using java style dot notation wildcard loading. the
  * hidden function arguments/parameters are:
  * 1 = either a custom base path from where to load the package or an array with regex exclude rules/patterns
  * 2 = an array with regex exclude rules if 1 is a custom base path. call like:
  *
  * <code>
- *      xapp_import('xapp.Package.*, '/custom/path/');
- *      xapp_import('xapp.Package.*, array('/^regex1$/', '/regex2/i'));
- *      xapp_import('xapp.Package.*, '/custom/path/', array('/^regex1$/', '/regex2/i'));
+ *      xapp_import('xapp.package.*, '/custom/path/');
+ *      xapp_import('xapp.package.*, array('/^regex1$/', '/regex2/i'));
+ *      xapp_import('xapp.package.*, '/custom/path/', array('/^regex1$/', '/regex2/i'));
  * </code>
  *
  * NOTE: the regex syntax for the the path/name exclusion argument must be a valid and complete regex pattern! Also the
  * exclude argument MUST be an array!
+ * NOTE: the package name is case insensitive
  *
  * @param string $import expects a a valid import value as defined above
  * @return boolean
@@ -795,35 +796,36 @@ function xapp_import($import)
 {
     $path = null;
 
-    //if is php includable file with relative or absolute path with DS separator or . dot separator include directly trying to resolve absolute path
+    //if is php includeable file with relative or absolute path with DS separator or . dot separator include directly
+    // trying to resolve absolute path
     if(preg_match('/(.*)\.(php|php5|phps|phtml|inc)$/i', $import, $m))
     {
         if(stripos($import, DS) === false)
         {
             $import = implode(DS, explode('.', trim($m[1], '.* '))) . '.' . trim($m[2], '.* ');
         }
-        if(in_array($import, get_required_files())){ return; }
+        if(in_array($import, get_required_files())){ return true; }
         if(is_file($import))
         {
             require_once $import;
             return true;
         }
         $class = xapp_path(XAPP_PATH_XAPP) . trim($import, DS);
-        if(in_array($class, get_required_files())){ return; }
+        if(in_array($class, get_required_files())){ return true; }
         if(is_file($class))
         {
             require_once $class;
             return true;
         }
         $class = xapp_path(XAPP_PATH_BASE) . trim($import, DS);
-        if(in_array($class, get_required_files())){ return; }
+        if(in_array($class, get_required_files())){ return true; }
         if(is_file($class))
         {
             require_once $class;
             return true;
         }
         $class = xapp_path(XAPP_PATH_ROOT) . trim($import, DS);
-        if(in_array($class, get_required_files())){ return; }
+        if(in_array($class, get_required_files())){ return true; }
         if(is_file($class))
         {
             require_once $class;
@@ -832,8 +834,9 @@ function xapp_import($import)
         require_once $import;
     //is java style import . dot notation with wildcard
     }else{
+        //get namespace and package name from import string
         $ns = substr($import, 0, strpos($import, '.'));
-        $pk = substr(substr($import, strlen($ns) + 1), 0, strpos(substr($import, strlen($ns) + 1), '.'));
+        $pkg = substr(substr($import, strlen($ns) + 1), 0, strpos(substr($import, strlen($ns) + 1), '.'));
         //if ns is not xapp check if composer autoloader and package to import exists
         if(stripos($ns, 'xapp') === false)
         {
@@ -855,7 +858,7 @@ function xapp_import($import)
         //if ns is xapp and xapp autoloader is loaded do nothing but only if package is not Ext
         if(stripos($ns, 'xapp') !== false && xapped('Xapp_Autoloader') && Xapp_Autoloader::hasInstance())
         {
-            if(stripos($pk, 'Ext') === false)
+            if(stripos($pkg, 'Ext') === false)
             {
                 return true;
             }
@@ -866,7 +869,7 @@ function xapp_import($import)
             $GLOBALS['XAPP_IMPORTS'] = array();
         }
         //if called class or package is already imported do nothing
-        if(in_array($import, $GLOBALS['XAPP_IMPORTS']))
+        if(in_array(strtolower($import), $GLOBALS['XAPP_IMPORTS']))
         {
             return true;
         }
@@ -875,14 +878,18 @@ function xapp_import($import)
         {
             $base = explode('.', trim($import, '. '));
             $class = array_pop($base);
-            if($base[0] === 'xapp' && SOURCE_SEPARATOR !== '')
+            if($base[0] === 'xapp')
             {
-                if(!array_key_exists(1, $base))
+                if(SOURCE_SEPARATOR !== '')
                 {
-                    array_push($base, $class, SOURCE_SEPARATOR);
-                }else{
-                    $base = array_merge(array_slice($base, 0, 2), array(SOURCE_SEPARATOR), array_slice($base, 2));
+                    if(!array_key_exists(1, $base))
+                    {
+                        array_push($base, $class, SOURCE_SEPARATOR);
+                    }else{
+                        $base = array_merge(array_slice($base, 0, 2), array(SOURCE_SEPARATOR), array_slice($base, 2));
+                    }
                 }
+                if(array_key_exists(1, $base)) $base[1] = strtolower($base[1]);
             }
             $base = implode(DS, $base);
             $path = xapp_path(XAPP_PATH_BASE);
@@ -892,19 +899,19 @@ function xapp_import($import)
                 $p = rtrim($p, DS) . DS;
                 if(is_file($p . $base . DS . $class . XAPP_EXT))
                 {
-                    array_push($GLOBALS['XAPP_IMPORTS'], $import);
+                    array_push($GLOBALS['XAPP_IMPORTS'], strtolower($import));
                     require_once $p . $base . DS . $class . XAPP_EXT;
                     return true;
                 }
                 if(is_file($p . $base . DS . $class . DS . $class . XAPP_EXT))
                 {
-                    array_push($GLOBALS['XAPP_IMPORTS'], $import);
+                    array_push($GLOBALS['XAPP_IMPORTS'], strtolower($import));
                     require_once $p . $base . DS . $class . DS . $class . XAPP_EXT;
                     return true;
                 }
             }
             trigger_error("unable to import: $import - class not found", E_USER_ERROR);
-        //import package
+        //import package with wildcard
         }else{
             $regex = null;
             if(func_num_args() >= 2)
@@ -930,14 +937,19 @@ function xapp_import($import)
             }
             foreach($path as $p)
             {
-                $b = rtrim($p, DS) . DS;
-                $p = $b . implode(DS, explode('.', trim($import, '.*'))) . DS;
                 $found = false;
+                $b = rtrim($p, DS) . DS;
+                $i = explode('.', trim($import, ' .*'));
+                if($i[0] === 'xapp' && array_key_exists(1, $i))
+                {
+                    $i[1] = strtolower($i[1]);
+                }
+                $p = $p . implode(DS, $i) . DS;
                 if(($dir = @opendir($p)) !== false)
                 {
                     while(($file = readdir($dir)) !== false)
                     {
-                        if($file === '.' || $file === '..' || stripos($file, '.svn') !== false)
+                        if((bool)preg_match('=^\.|\.\.|\.git.*|\.svn$=i', $file))
                         {
                             continue;
                         }else if($regex !== null){
@@ -949,13 +961,13 @@ function xapp_import($import)
                                 }
                             }
                         }else if(is_dir($p . $file)){
-                            xapp_import(trim($import, '.*') . '.' . $file . '.*', $b, $regex);
+                            xapp_import(trim($import, ' .*') . '.' . $file . '.*', $b, $regex);
                         }else if(strpos($file, XAPP_EXT) !== false){
-                            $i = trim($import, '.*') . '.' . substr($file, 0, strrpos($file, XAPP_EXT));
-                            if(!in_array($i, $GLOBALS['XAPP_IMPORTS']))
+                            $i = trim($import, ' .*') . '.' . substr($file, 0, strrpos($file, XAPP_EXT));
+                            if(!in_array(strtolower($i), $GLOBALS['XAPP_IMPORTS']))
                             {
                                 require_once $p . $file;
-                                array_push($GLOBALS['XAPP_IMPORTS'], $i);
+                                array_push($GLOBALS['XAPP_IMPORTS'], strtolower($i));
                                 $found = true;
                             }
                         }
@@ -963,9 +975,9 @@ function xapp_import($import)
                     if($found) break;
                 }
             }
-            if(!in_array($import, $GLOBALS['XAPP_IMPORTS']))
+            if(!in_array(strtolower($import), $GLOBALS['XAPP_IMPORTS']))
             {
-                array_push($GLOBALS['XAPP_IMPORTS'], $import);
+                array_push($GLOBALS['XAPP_IMPORTS'], strtolower($import));
             }
             return true;
         }
