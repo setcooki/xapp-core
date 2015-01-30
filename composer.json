@@ -14,10 +14,5 @@
     "require": {
         "php": ">=5.2.6"
     },
-    "repositories": [{
-        "packagist": false,
-        "type": "composer",
-        "url": "http://www.pearls-media.com/packages/packages.json"
-    }],
     "minimum-stability": "dev"
 }
