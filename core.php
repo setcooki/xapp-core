@@ -533,12 +533,7 @@ function xapp_init()
     {
         define('NAMESPACE_SEPARATOR', '\\');
     }
-    if(is_dir(rtrim(dirname(__FILE__), DS) . DS . 'branches'))
-    {
-        define('SOURCE_SEPARATOR', 'src');
-    }else{
-        define('SOURCE_SEPARATOR', '');
-    }
+    define('SOURCE_SEPARATOR', 'src');
     if(get_magic_quotes_gpc() === 1)
     {
         if(function_exists('json_encode'))
