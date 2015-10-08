@@ -1169,12 +1169,12 @@ if(!function_exists('xapp_cache'))
      * </code>
      *
      * @param null|string $with expects a namespace identifier or null for targeting current instance
-     * @param string $key expects the cache key string
+     * @param null|string $key expects the cache key string
      * @param null|mixed $value expects the to be cached value when setting
      * @param null|int $lifetime expects the optional lifetime value
-     * @return null|mixed
+     * @return false|mixed
      */
-    function xapp_cache($with, $key, $value = null, $lifetime = null)
+    function xapp_cache($with = null, $key = null, $value = null, $lifetime = null)
     {
         if(!is_null($with))
         {
@@ -1184,7 +1184,7 @@ if(!function_exists('xapp_cache'))
         }
         if(!xapped() || !xapped('Xapp_Cache', false) || !$instance)
         {
-            return ((func_num_args() === 2) ? $value : false);
+            return ((func_num_args() >= 3) ? $value : false);
         }
         if(func_num_args() > 0)
         {
