@@ -1125,15 +1125,15 @@ if(!function_exists('xapp_cache'))
     /**
      * xapp cache short cut function for using the caching capabilities of xapp in a intuitive way. this function is
      * expecting at least one cache instance create with xapp cache class in order to work. if xapp cache class is
-     * not xapped and has no instance registered will return null or false depending on get or set way of calling.
+     * not xapped and has no instance registered will return the value passed or false depending on get or set way of calling.
      * this function will combines the three stages of caching has, get, set. check if a cache entry exists, get the
-     * entry and if not set it. the shortcut function will work with or without namespace identifier. if you want to
-     * use the current instance use the function like:
+     * entry and if not set it. the shortcut function will work without ns identifier selecting current selected cache instance
+     * but expects first argument to be NULL:
      * <code>
      *      //set
-     *      xapp_cache($key, $value);
+     *      xapp_cache(null, $key, $value);
      *      //get
-     *      xapp_cache($key);
+     *      xapp_cache(null, $key);
      * </code>
      *
      * if you want to refer to your instances create with namespace identifiers do it like:
@@ -1176,25 +1176,28 @@ if(!function_exists('xapp_cache'))
      */
     function xapp_cache($with, $key, $value = null, $lifetime = null)
     {
-        if(xapped() && xapped('Xapp_Cache', false))
+        if(!is_null($with))
         {
-            if(Xapp_Cache::hasInstance())
-            {
-                if(func_num_args() > 0)
-                {
-                    if(func_num_args() >= 3 && $value !== null)
-                    {
-                        Xapp_Cache::set($with, $key, $value, $lifetime);
-                        return $value;
-                    }else{
-                        return Xapp_Cache::get($with, $key, ((func_num_args() === 2) ? false : null));
-                    }
-                }else{
-                    return Xapp_Cache::purge();
-                }
-            }
+            $instance = Xapp_Cache::hasInstance($with);
+        }else{
+            $instance = Xapp_Cache::hasInstance();
         }
-        return ((func_num_args() === 2) ? false : null);
+        if(!xapped() || !xapped('Xapp_Cache', false) || !$instance)
+        {
+            return ((func_num_args() === 2) ? $value : false);
+        }
+        if(func_num_args() > 0)
+        {
+            if(func_num_args() >= 3 && $value !== null)
+            {
+                Xapp_Cache::set($with, $key, $value, $lifetime);
+                return $value;
+            }else{
+                return Xapp_Cache::get($with, $key, ((func_num_args() === 2) ? false : null));
+            }
+        }else{
+            return Xapp_Cache::purge();
+        }
     }
 }
 
