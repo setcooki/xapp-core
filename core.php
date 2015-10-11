@@ -292,7 +292,8 @@ define('XAPP_CONF_HANDLE_EXCEPTION',    'HANDLE_EXCEPTION');
  * 2)   if set to object or callable = sets shutdown according to value passed
  * 3)   if set to null|false = nothing will be set
  * NOTE: when using xapp base module shutdown handler should not be changed and constant passed with true. This will take
- * that error handling will be done right
+ * that error handling will be done right.
+ * NOTE: you should use xapp to always handle shutdown if you are in dev mode and need to use xapp´s auto debug capabilities
  *
  * @const XAPP_CONF_HANDLE_SHUTDOWN
  */
@@ -384,7 +385,7 @@ define('XAPP_CONF_DEV_MODE',            'DEV_MODE');
 
 /**
  * conf value debug mode, if set, determines xapps debug message handling like:
- * 1)   if set to true|1 = will print all debug messages to screen in shutdown
+ * 1)   if set to true|1 = will print all debug messages to screen in shutdown (see notes below)
  * 2)   if set to 2 = will log debug messages to default log location overwriting previous log
  * 3)   if set to 3 = will log debug messages to default log location appending to log file
  * 4)   if set to 4 = will be routed directly to php console if Xapp_Console is used or driver has been specified for
@@ -393,6 +394,8 @@ define('XAPP_CONF_DEV_MODE',            'DEV_MODE');
  * 6)   if set to null|false = ignore debug messages and discard them
  * NOTE: since all debug messages are first send to xapp_debug function all debug methods can be intercepted by overwriting
  * xapp_debug
+ * NOTE: xapp needs to run with option XAPP_CONF_HANDLE_SHUTDOWN value = 1|true otherwise debug messages will not
+ * be dumped or otherwise processed and you need to get debug messages manually with Xapp::debug()
  *
  * @const XAPP_CONF_DEBUG_MODE
  */
