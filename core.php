@@ -941,6 +941,10 @@ function xapp_import($import)
                 if($i[0] === 'xapp' && array_key_exists(1, $i))
                 {
                     $i[1] = strtolower($i[1]);
+                    if(SOURCE_SEPARATOR !== '')
+                    {
+                        $i = array_merge(array_slice($i, 0, 2), array(SOURCE_SEPARATOR), array_slice($i, 2, null));
+                    }
                 }
                 $p = $p . implode(DS, $i) . DS;
                 if(($dir = @opendir($p)) !== false)
